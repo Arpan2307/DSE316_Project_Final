@@ -39,6 +39,12 @@ def load_dataset():
 
     return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn, num_workers=NUM_WORKERS)
 
+def map_labels_to_classes(labels):
+    unique_labels = torch.unique(labels)
+    label_to_class = {label.item(): idx for idx, label in enumerate(unique_labels)}
+    mapped_labels = torch.tensor([label_to_class[label.item()] for label in labels])
+    return mapped_labels, len(unique_labels)
+
 def evaluate_model():
     # Load dataset
     dataloader = load_dataset()
@@ -46,19 +52,21 @@ def evaluate_model():
     # Extract data and labels from the DataLoader
     data, labels = next(iter(dataloader))
 
+    # Map the labels to class indices
+    mapped_labels, n_classes = map_labels_to_classes(labels)
+
     # Split dataset into train and test sets
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(data, mapped_labels, test_size=0.2, random_state=42)
 
     # Load the trained model
-    model = FeatureCalibrationNet()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = FeatureCalibrationNet().to(device)
     model.load_state_dict(torch.load('model.pth'))
     model.eval()
 
-    # Ensure the input data is resized to match the model's expected input dimensions
-    X_test = X_test.view(X_test.size(0), -1)[:,:FEATURE_DIM]
-
-    # Fix tensor warning by using clone().detach()
-    X_test = X_test.clone().detach()
+    # Move data to the same device as the model
+    X_test = X_test.to(device)
+    y_test = y_test.to(device)
 
     # Debugging: Print the shape and a sample of the input data
     print("Input Data Shape:", X_test.shape)
@@ -67,11 +75,14 @@ def evaluate_model():
     # Perform evaluation on the test set
     with torch.no_grad():
         predictions = model(X_test.float())
-        predicted_labels = torch.argmax(predictions, dim=1).numpy()
+        print("Raw Model Output Shape:", predictions.shape)
+        print("Raw Model Output Sample:", predictions[0])
+        predicted_labels = torch.argmax(predictions, dim=1).cpu().numpy()
+        y_test = y_test.cpu().numpy()
 
     # Debugging: Print predictions and true labels
     print("Predictions:", predicted_labels)
-    print("True Labels:", y_test.numpy())
+    print("True Labels:", y_test)
 
     # Calculate evaluation metrics
     accuracy = accuracy_score(y_test, predicted_labels)
