@@ -58,31 +58,33 @@ def evaluate_model():
     # Split dataset into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(data, mapped_labels, test_size=0.2, random_state=42)
 
-    # Load the trained model
+    # Load the trained models
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = FeatureCalibrationNet().to(device)
-    model.load_state_dict(torch.load('model.pth'))
-    model.eval()
+    feature_extractor = AudioFeatureExtractor(FEATURE_DIM).to(device)
+    calibration_net = FeatureCalibrationNet().to(device)
+    calibration_net.load_state_dict(torch.load('model.pth'))
+    calibration_net.eval()
 
-    # Move data to the same device as the model and reshape for 1D pooling
+    # Move data to device
     X_test = X_test.to(device)
     y_test = y_test.to(device)
-    
-    # Reshape for 1D pooling (batch_size, channels, sequence_length)
-    X_test = X_test.view(X_test.size(0), 1, -1)  # Add channel dimension
 
-    # Debugging: Print the shape and a sample of the input data
-    print("Input Data Shape:", X_test.shape)
-    print("Input Data Sample:", X_test[0])
-
-    # Perform evaluation on the test set
+    # Extract features first
     with torch.no_grad():
-        predictions = model(X_test.float())
+        # Reshape input for feature extraction (batch_size, sequence_length)
+        X_test = X_test.squeeze(1)  # Remove channel dimension
+        features = feature_extractor(X_test)
+        
+        # Pass features through calibration network
+        predictions = calibration_net(features)
         probabilities = torch.nn.functional.softmax(predictions, dim=1)
+        
+        print("Features Shape:", features.shape)
         print("Raw Model Output Shape:", predictions.shape)
         print("Raw Model Output Sample:", predictions[0])
         print("Probabilities Shape:", probabilities.shape)
         print("Probabilities Sample:", probabilities[0])
+        
         predicted_labels = torch.argmax(probabilities, dim=1).cpu().numpy()
         y_test = y_test.cpu().numpy()
 
