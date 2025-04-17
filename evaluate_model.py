@@ -70,10 +70,17 @@ def evaluate_model():
     # Ensure the input data is resized to match the model's expected input dimensions
     X_test = X_test.view(X_test.size(0), -1)[:,:FEATURE_DIM]
 
+    # Fix tensor warning by using clone().detach()
+    X_test = X_test.clone().detach()
+
     # Perform evaluation on the test set
     with torch.no_grad():
-        predictions = model(torch.tensor(X_test, dtype=torch.float32))
+        predictions = model(X_test.float())
         predicted_labels = torch.argmax(predictions, dim=1).numpy()
+
+    # Debugging: Print predictions and true labels
+    print("Predictions:", predicted_labels)
+    print("True Labels:", y_test.numpy())
 
     # Calculate evaluation metrics
     accuracy = accuracy_score(y_test, predicted_labels)
