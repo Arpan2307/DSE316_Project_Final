@@ -50,44 +50,47 @@ def map_labels_to_classes(labels):
     return mapped_labels, len(unique_labels)
 
 # Model setup
-model = FeatureCalibrationNet().to(device)  # Replace with your actual model
+feature_extractor = AudioFeatureExtractor(FEATURE_DIM).to(device)
+calibration_net = FeatureCalibrationNet().to(device)
 
 # Loss functions
 ce_loss = nn.CrossEntropyLoss()
 
 # Optimizer setup
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+optimizer = optim.Adam(list(feature_extractor.parameters()) + list(calibration_net.parameters()), lr=LEARNING_RATE)
 
 # Training loop
 for epoch in range(EPOCHS):
-    model.train()  # Set model to training mode
+    feature_extractor.train()
+    calibration_net.train()
     total_loss = 0
+    correct = 0
+    total = 0
 
     for batch_idx, (waveforms, labels) in enumerate(train_loader):
         waveforms, labels = waveforms.to(device), labels.to(device)
-
-        # Map the labels to class indices
         mapped_labels, n_classes = map_labels_to_classes(labels)
 
+        # Extract features
+        with torch.no_grad():
+            feats = feature_extractor(waveforms)
         # Forward pass
-        logits = model(waveforms)  # Replace with actual model's forward pass
-        
-        # Compute cross-entropy loss
+        logits = calibration_net(feats)
         loss_ce = ce_loss(logits, mapped_labels)
-        
-        # Optionally add other losses (e.g., contrastive_loss, knowledge_distillation_loss)
-        loss = loss_ce  # Combine losses if necessary
+        loss = loss_ce
 
-        # Backward pass
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         total_loss += loss.item()
+        predicted = torch.argmax(logits, dim=1)
+        correct += (predicted == mapped_labels).sum().item()
+        total += mapped_labels.size(0)
 
-    # Print epoch statistics
-    print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {total_loss / len(train_loader)}")
+    acc = correct / total if total > 0 else 0
+    print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {total_loss / len(train_loader):.4f}, Accuracy: {acc:.4f}")
 
-# Save model checkpoint if necessary
-torch.save(model.state_dict(), "model.pth")
+# Save model checkpoint
+torch.save(calibration_net.state_dict(), "model.pth")
 
