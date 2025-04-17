@@ -73,6 +73,10 @@ def evaluate_model():
     # Fix tensor warning by using clone().detach()
     X_test = X_test.clone().detach()
 
+    # Debugging: Print the shape and a sample of the input data
+    print("Input Data Shape:", X_test.shape)
+    print("Input Data Sample:", X_test[0])
+
     # Perform evaluation on the test set
     with torch.no_grad():
         predictions = model(X_test.float())
