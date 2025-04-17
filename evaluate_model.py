@@ -67,8 +67,8 @@ def evaluate_model():
     model.load_state_dict(torch.load('model.pth'))
     model.eval()
 
-    # Reshape the input data to match the model's expected input dimensions
-    X_test = X_test.view(X_test.size(0), -1)
+    # Ensure the input data is resized to match the model's expected input dimensions
+    X_test = X_test.view(-1, FEATURE_DIM)
 
     # Perform evaluation on the test set
     with torch.no_grad():
