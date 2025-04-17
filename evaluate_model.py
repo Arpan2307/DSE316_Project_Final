@@ -32,8 +32,6 @@ def load_dataset():
 
             waveforms.append(padded_waveform)
             labels.append(hash(speaker_id) % (10 ** 8))  # Use a hash of the speaker_id for unique numeric labels
- 
-        # Convert speaker_id to integer
 
         return torch.cat(waveforms), torch.tensor(labels)
 
@@ -41,7 +39,10 @@ def load_dataset():
 
 def evaluate_model():
     # Load dataset
-    data, labels = load_dataset()
+    dataloader = load_dataset()
+
+    # Extract data and labels from the DataLoader
+    data, labels = next(iter(dataloader))
 
     # Split dataset into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
