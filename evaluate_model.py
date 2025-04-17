@@ -64,9 +64,12 @@ def evaluate_model():
     model.load_state_dict(torch.load('model.pth'))
     model.eval()
 
-    # Move data to the same device as the model
+    # Move data to the same device as the model and reshape for 1D pooling
     X_test = X_test.to(device)
     y_test = y_test.to(device)
+    
+    # Reshape for 1D pooling (batch_size, channels, sequence_length)
+    X_test = X_test.view(X_test.size(0), 1, -1)  # Add channel dimension
 
     # Debugging: Print the shape and a sample of the input data
     print("Input Data Shape:", X_test.shape)
@@ -75,9 +78,12 @@ def evaluate_model():
     # Perform evaluation on the test set
     with torch.no_grad():
         predictions = model(X_test.float())
+        probabilities = torch.nn.functional.softmax(predictions, dim=1)
         print("Raw Model Output Shape:", predictions.shape)
         print("Raw Model Output Sample:", predictions[0])
-        predicted_labels = torch.argmax(predictions, dim=1).cpu().numpy()
+        print("Probabilities Shape:", probabilities.shape)
+        print("Probabilities Sample:", probabilities[0])
+        predicted_labels = torch.argmax(probabilities, dim=1).cpu().numpy()
         y_test = y_test.cpu().numpy()
 
     # Debugging: Print predictions and true labels
