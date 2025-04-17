@@ -18,11 +18,21 @@ def load_dataset():
 
     def collate_fn(batch):
         waveforms, labels = [], []
+
+        # Find the maximum length of waveforms in the batch
+        max_length = max(waveform.shape[1] for waveform, _, _, *_ in batch)
+
         for waveform, _, speaker_id, *_ in batch:
             if waveform.shape[0] > 1:
                 waveform = waveform.mean(dim=0, keepdim=True)
-            waveforms.append(resampler(waveform))
+
+            # Pad the waveform to the maximum length
+            padding = max_length - waveform.shape[1]
+            padded_waveform = torch.nn.functional.pad(waveform, (0, padding))
+
+            waveforms.append(padded_waveform)
             labels.append(speaker_id)
+
         return torch.cat(waveforms), torch.tensor(labels)
 
     return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_fn, num_workers=NUM_WORKERS)
