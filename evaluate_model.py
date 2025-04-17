@@ -6,9 +6,22 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from torchaudio.datasets import LIBRISPEECH
 from torchaudio.transforms import Resample
 from torch.utils.data import DataLoader
+from model.feature_extractor import AudioFeatureExtractor
+from torch import nn
 
 BATCH_SIZE = 32
 NUM_WORKERS = 4
+
+# Define the model architecture
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.feature_extractor = AudioFeatureExtractor(FEATURE_DIM)
+        self.classifier = nn.Linear(FEATURE_DIM, NUM_CLASSES)
+
+    def forward(self, x):
+        features = self.feature_extractor(x)
+        return self.classifier(features)
 
 def load_dataset():
     # Define dataset path and parameters
@@ -48,7 +61,8 @@ def evaluate_model():
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
     # Load the trained model
-    model = torch.load('model.pth')
+    model = Model()
+    model.load_state_dict(torch.load('model.pth'))
     model.eval()
 
     # Perform evaluation on the test set
