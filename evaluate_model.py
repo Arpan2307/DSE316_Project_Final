@@ -68,7 +68,7 @@ def evaluate_model():
     model.eval()
 
     # Ensure the input data is resized to match the model's expected input dimensions
-    X_test = X_test.view(-1, FEATURE_DIM)
+    X_test = X_test.view(X_test.size(0), -1)[:,:FEATURE_DIM]
 
     # Perform evaluation on the test set
     with torch.no_grad():
