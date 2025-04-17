@@ -1,6 +1,6 @@
 
 BATCH_SIZE = 16
-EPOCHS = 5
+EPOCHS = 1
 LEARNING_RATE = 1e-4
 FEATURE_DIM = 256
 NUM_CLASSES = 251  # Based on LibriSpeech-100 speakers
