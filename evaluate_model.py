@@ -1,4 +1,4 @@
-from config import LIBRISPEECH_PATH, FEATURE_DIM
+from config import LIBRISPEECH_PATH, FEATURE_DIM, NUM_CLASSES
 import os
 import torch
 from sklearn.model_selection import train_test_split
