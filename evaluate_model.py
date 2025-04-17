@@ -12,14 +12,14 @@ from torch import nn
 BATCH_SIZE = 32
 NUM_WORKERS = 4
 
-# Redefine the model architecture to match the saved state_dict
+# Adjust the model architecture to match the saved state_dict
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         self.net = nn.Sequential(
-            nn.Linear(FEATURE_DIM, 128),  # Layer 0
+            nn.Linear(FEATURE_DIM, FEATURE_DIM),  # Layer 0
             nn.ReLU(),
-            nn.Linear(128, NUM_CLASSES)  # Layer 2
+            nn.Linear(FEATURE_DIM, FEATURE_DIM)  # Layer 2
         )
 
     def forward(self, x):
