@@ -35,7 +35,7 @@ def collate_fn(batch):
         padded_waveform = torch.nn.functional.pad(waveform, (0, padding))
 
         waveforms.append(padded_waveform)
-        labels.append(int(speaker_id))  # Store the speaker_id as an integer for later mapping
+        labels.append(hash(speaker_id) % (10 ** 8))  # Use a hash of the speaker_id for unique numeric labels
 
     return torch.stack(waveforms), torch.tensor(labels)
 
