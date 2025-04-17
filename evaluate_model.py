@@ -12,16 +12,18 @@ from torch import nn
 BATCH_SIZE = 32
 NUM_WORKERS = 4
 
-# Define the model architecture
+# Redefine the model architecture to match the saved state_dict
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.feature_extractor = AudioFeatureExtractor(FEATURE_DIM)
-        self.classifier = nn.Linear(FEATURE_DIM, NUM_CLASSES)
+        self.net = nn.Sequential(
+            nn.Linear(FEATURE_DIM, 128),  # Layer 0
+            nn.ReLU(),
+            nn.Linear(128, NUM_CLASSES)  # Layer 2
+        )
 
     def forward(self, x):
-        features = self.feature_extractor(x)
-        return self.classifier(features)
+        return self.net(x)
 
 def load_dataset():
     # Define dataset path and parameters
