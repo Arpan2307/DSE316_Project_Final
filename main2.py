@@ -69,6 +69,7 @@ for epoch in range(EPOCHS):
 
     for batch_idx, (waveforms, labels) in enumerate(train_loader):
         waveforms, labels = waveforms.to(device), labels.to(device)
+        waveforms = waveforms.squeeze(1)  # Ensure shape [batch, time] for wav2vec2
         mapped_labels, n_classes = map_labels_to_classes(labels)
 
         # Extract features
