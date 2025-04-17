@@ -31,7 +31,9 @@ def load_dataset():
             padded_waveform = torch.nn.functional.pad(waveform, (0, padding))
 
             waveforms.append(padded_waveform)
-            labels.append(int(speaker_id))  # Convert speaker_id to integer
+            labels.append(hash(speaker_id) % (10 ** 8))  # Use a hash of the speaker_id for unique numeric labels
+ 
+        # Convert speaker_id to integer
 
         return torch.cat(waveforms), torch.tensor(labels)
 
