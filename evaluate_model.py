@@ -7,23 +7,10 @@ from torchaudio.datasets import LIBRISPEECH
 from torchaudio.transforms import Resample
 from torch.utils.data import DataLoader
 from model.feature_extractor import AudioFeatureExtractor
-from torch import nn
+from model.calibration_net import FeatureCalibrationNet
 
 BATCH_SIZE = 32
 NUM_WORKERS = 4
-
-# Adjust the model architecture to match the saved state_dict
-class Model(nn.Module):
-    def __init__(self):
-        super(Model, self).__init__()
-        self.net = nn.Sequential(
-            nn.Linear(FEATURE_DIM, FEATURE_DIM),  # Layer 0
-            nn.ReLU(),
-            nn.Linear(FEATURE_DIM, FEATURE_DIM)  # Layer 2
-        )
-
-    def forward(self, x):
-        return self.net(x)
 
 def load_dataset():
     # Define dataset path and parameters
@@ -63,7 +50,7 @@ def evaluate_model():
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
     # Load the trained model
-    model = Model()
+    model = FeatureCalibrationNet()
     model.load_state_dict(torch.load('model.pth'))
     model.eval()
 
